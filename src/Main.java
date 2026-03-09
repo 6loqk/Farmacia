@@ -83,7 +83,7 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        loadFromFile("LoadProducts.txt");
+        loadFromFile("src/LoadProducts.txt");
         int op;
         do {
             op = mainMenu();
