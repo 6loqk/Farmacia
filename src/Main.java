@@ -1,898 +1,902 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.Scanner;
 
 public class Main {
 
-    static Pill[] pills = new Pill[150];
-    static Syrup[] syrups = new Syrup[100];
-    static Ointment[] ointments = new Ointment[100];
+    static Pill[] pastillas = new Pill[150];
+    static Syrup[] jarabes = new Syrup[100];
+    static Ointment[] pomadas = new Ointment[100];
 
-    static int pillCount = 0;
-    static int syrupCount = 0;
-    static int ointCount = 0;
+    static int numPastillas = 0;
+    static int numJarabes = 0;
+    static int numPomadas = 0;
 
     static Scanner sc = new Scanner(System.in);
-    static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
-    static void loadFromFile(String fileName) {
-        try {
-            File file = new File(fileName);
-            Scanner fileReader = new Scanner(file);
-
-            while (fileReader.hasNextLine()) {
-                String name = fileReader.nextLine().trim();
-                if (name.isEmpty()) continue;
-
-                String lab = fileReader.nextLine().trim();
-                boolean generic = Boolean.parseBoolean(fileReader.nextLine().trim());
-                int barCode = Integer.parseInt(fileReader.nextLine().trim());
-                double cost = Double.parseDouble(fileReader.nextLine().trim());
-                double publicPrice = Double.parseDouble(fileReader.nextLine().trim());
-                LocalDate manuf = LocalDate.parse(fileReader.nextLine().trim());
-                LocalDate expir = LocalDate.parse(fileReader.nextLine().trim());
-
-                String extraLine = fileReader.nextLine().trim();
-
-                if (extraLine.contains("TABLETAS")) {
-                    int tablets = Integer.parseInt(extraLine.split(" ")[0]);
-                    double mg = Double.parseDouble(fileReader.nextLine().trim().split(" ")[0]);
-
-                    if (pillCount < pills.length) {
-                        pills[pillCount++] = new Pill(
-                                name, lab, generic, barCode,
-                                cost, publicPrice, manuf, expir,
-                                tablets, mg
-                        );
-                    }
-
-                } else if (extraLine.contains("ML")) {
-                    int ml = Integer.parseInt(extraLine.split(" ")[0]);
-                    boolean cup = Boolean.parseBoolean(fileReader.nextLine().trim());
-
-                    if (syrupCount < syrups.length) {
-                        syrups[syrupCount++] = new Syrup(
-                                name, lab, generic, barCode,
-                                cost, publicPrice, manuf, expir,
-                                ml, cup
-                        );
-                    }
-
-                } else if (extraLine.contains("GRAMOS")) {
-                    int grams = Integer.parseInt(extraLine.split(" ")[0]);
-
-                    if (ointCount < ointments.length) {
-                        ointments[ointCount++] = new Ointment(
-                                name, lab, generic, barCode,
-                                cost, publicPrice, manuf, expir,
-                                grams
-                        );
-                    }
-                }
-            }
-
-            fileReader.close();
-            System.out.println("  ✔ Archivo cargado: " + fileName);
-
-        } catch (FileNotFoundException e) {
-            System.out.println("  Archivo no encontrado: " + fileName);
-        }
-    }
 
     public static void main(String[] args) {
-        loadFromFile("src/LoadProducts.txt");
-        int op;
+        cargarArchivo("src/LoadProducts.txt");
+
+        int opcion;
         do {
-            op = mainMenu();
-            switch (op) {
-                case 1 -> menuAdd();
-                case 2 -> menuDelete();
-                case 3 -> menuModify();
-                case 4 -> menuPrintPatent();
-                case 5 -> menuPrintGeneric();
-                case 6 -> menuSummary();
-                case 7 -> menuSearch();
-                case 8 -> menuSort();
-                case 9 -> exitProgram();
-                default -> System.out.println("  Opción no válida.\n");
+            System.out.println("\n========================================");
+            System.out.println("   FARMACIA EL AHORRO - MENU PRINCIPAL  ");
+            System.out.println("========================================");
+            System.out.println("1. Ingresar medicamento");
+            System.out.println("2. Borrar medicamento");
+            System.out.println("3. Modificar medicamento");
+            System.out.println("4. Imprimir medicamentos de Patente");
+            System.out.println("5. Imprimir medicamentos Genericos");
+            System.out.println("6. Imprimir Resumen");
+            System.out.println("7. Buscar");
+            System.out.println("8. Ordenar e Imprimir");
+            System.out.println("9. Salir");
+            System.out.print("Seleccione una opcion: ");
+            opcion = Integer.parseInt(sc.nextLine());
+
+            switch (opcion) {
+                case 1: menuIngresar(); break;
+                case 2: menuBorrar(); break;
+                case 3: menuModificar(); break;
+                case 4: menuPatente(); break;
+                case 5: menuGenerico(); break;
+                case 6: menuResumen(); break;
+                case 7: menuBuscar(); break;
+                case 8: menuOrdenar(); break;
+                case 9: menuSalir(); break;
+                default: System.out.println("Opcion no valida.");
             }
-        } while (op != 9);
+
+        } while (opcion != 9);
     }
 
-    static String readString(String msg) {
-        System.out.print(msg);
-        return sc.nextLine().trim();
-    }
+    static void cargarArchivo(String nombreArchivo) {
+        try {
+            File archivo = new File(nombreArchivo);
+            Scanner lector = new Scanner(archivo);
 
-    static int readInt(String msg) {
-        while (true) {
-            System.out.print(msg);
-            try {
-                return Integer.parseInt(sc.nextLine().trim());
-            } catch (NumberFormatException e) {
-                System.out.println("  Ingrese un número entero válido.");
-            }
-        }
-    }
+            while (lector.hasNextLine()) {
+                String nombre = lector.nextLine().trim();
+                if (nombre.isEmpty()) continue;
 
-    static double readDouble(String msg) {
-        while (true) {
-            System.out.print(msg);
-            try {
-                return Double.parseDouble(sc.nextLine().trim());
-            } catch (NumberFormatException e) {
-                System.out.println("  Ingrese un número válido.");
-            }
-        }
-    }
+                String laboratorio = lector.nextLine().trim();
+                boolean esGenerico = Boolean.parseBoolean(lector.nextLine().trim());
+                int codigoBarras = Integer.parseInt(lector.nextLine().trim());
+                double costo = Double.parseDouble(lector.nextLine().trim());
+                double precio = Double.parseDouble(lector.nextLine().trim());
+                LocalDate fechaFab = LocalDate.parse(lector.nextLine().trim());
+                LocalDate fechaCad = LocalDate.parse(lector.nextLine().trim());
+                String lineaExtra = lector.nextLine().trim();
 
-    static boolean readYesNo(String msg) {
-        while (true) {
-            System.out.print(msg + " (s/n): ");
-            String r = sc.nextLine().trim().toLowerCase();
-            if (r.equals("s") || r.equals("si") || r.equals("sí")) return true;
-            if (r.equals("n") || r.equals("no")) return false;
-            System.out.println("  Responda s o n.");
-        }
-    }
-
-    static LocalDate readDate(String msg) {
-        while (true) {
-            System.out.print(msg + " (dd/MM/yyyy): ");
-            try {
-                return LocalDate.parse(sc.nextLine().trim(), FMT);
-            } catch (DateTimeParseException e) {
-                System.out.println("  Formato incorrecto. Use dd/MM/yyyy.");
-            }
-        }
-    }
-
-    static void line() {
-        System.out.println("─".repeat(72));
-    }
-
-    static void title(String t) {
-        line();
-        System.out.println("  " + t);
-        line();
-    }
-
-    static String compactPill(Pill p) {
-        return String.format("%-28s | %-16s | $%7.2f | %-8s | %d tabs, %.0fmg",
-                p.getMedicineName(), p.getLaboratoryName(), p.getMedicinePricePublic(),
-                p.isGeneric() ? "Genérico" : "Patente", p.getTablets(), p.getMilligrams());
-    }
-
-    static String compactSyrup(Syrup s) {
-        return String.format("%-28s | %-16s | $%7.2f | %-8s | %dml, vaso:%s",
-                s.getMedicineName(), s.getLaboratoryName(), s.getMedicinePricePublic(),
-                s.isGeneric() ? "Genérico" : "Patente", s.getMilliliters(),
-                s.isMeasuringCup() ? "Sí" : "No");
-    }
-
-    static String compactOintment(Ointment o) {
-        return String.format("%-28s | %-16s | $%7.2f | %-8s | %dg",
-                o.getMedicineName(), o.getLaboratoryName(), o.getMedicinePricePublic(),
-                o.isGeneric() ? "Genérico" : "Patente", o.getGrams());
-    }
-
-    static String compactMed(Medicine m) {
-        if (m instanceof Pill) return "[Pastilla] " + compactPill((Pill) m);
-        if (m instanceof Syrup) return "[Jarabe  ] " + compactSyrup((Syrup) m);
-        if (m instanceof Ointment) return "[Pomada  ] " + compactOintment((Ointment) m);
-        return m.toString();
-    }
-
-    // ════════════════════════ MENÚ PRINCIPAL ════════════════════════════════
-    static int mainMenu() {
-        System.out.println();
-        title("FARMACIA EL AHORRO  –  MENÚ PRINCIPAL");
-        System.out.println("  1. Ingresar medicamento");
-        System.out.println("  2. Borrar medicamento");
-        System.out.println("  3. Modificar medicamento");
-        System.out.println("  4. Imprimir medicamentos de Patente");
-        System.out.println("  5. Imprimir medicamentos Genéricos");
-        System.out.println("  6. Imprimir Resumen");
-        System.out.println("  7. Buscar");
-        System.out.println("  8. Ordenar e Imprimir (Burbuja)");
-        System.out.println("  9. Salir");
-        line();
-        return readInt("  Seleccione una opción: ");
-    }
-
-    // ══════════════════════════ 1. INGRESAR ═════════════════════════════════
-    static void menuAdd() {
-        title("INGRESAR MEDICAMENTO");
-        System.out.println("  a) Pastilla   b) Jarabe   c) Pomada");
-        String op = readString("  Seleccione: ").toLowerCase();
-        switch (op) {
-            case "a" -> addPill();
-            case "b" -> addSyrup();
-            case "c" -> addOintment();
-            default -> System.out.println("  Opción no válida.");
-        }
-    }
-
-    static Object[] readCommonFields() {
-        String name = readString("  Nombre del medicamento : ");
-        String lab = readString("  Laboratorio            : ");
-        boolean gen = readYesNo("  ¿Es genérico?          ");
-        int barcode = readInt("  Código de barras       : ");
-        double cost = readDouble("  Costo                  : $");
-        double price = readDouble("  Precio al público      : $");
-        LocalDate fab = readDate("  Fecha de fabricación   ");
-        LocalDate exp = readDate("  Fecha de caducidad     ");
-        return new Object[]{name, lab, gen, barcode, cost, price, fab, exp};
-    }
-
-    static void addPill() {
-        if (pillCount >= pills.length) {
-            System.out.println("  Inventario de pastillas lleno.");
-            return;
-        }
-        title("NUEVA PASTILLA");
-        Object[] c = readCommonFields();
-        int tabs = readInt("  Número de tabletas en caja: ");
-        double mg = readDouble("  Miligramos                : ");
-        pills[pillCount++] = new Pill(
-                (String) c[0], (String) c[1], (boolean) c[2], (int) c[3],
-                (double) c[4], (double) c[5], (LocalDate) c[6], (LocalDate) c[7], tabs, mg);
-        System.out.println("  ✔ Pastilla registrada.");
-    }
-
-    static void addSyrup() {
-        if (syrupCount >= syrups.length) {
-            System.out.println("  Inventario de jarabes lleno.");
-            return;
-        }
-        title("NUEVO JARABE");
-        Object[] c = readCommonFields();
-        int ml = readInt("  Mililitros en el frasco   : ");
-        boolean cup = readYesNo("  ¿Incluye vaso dosificador?");
-        syrups[syrupCount++] = new Syrup(
-                (String) c[0], (String) c[1], (boolean) c[2], (int) c[3],
-                (double) c[4], (double) c[5], (LocalDate) c[6], (LocalDate) c[7], ml, cup);
-        System.out.println("  ✔ Jarabe registrado.");
-    }
-
-    static void addOintment() {
-        if (ointCount >= ointments.length) {
-            System.out.println("  Inventario de pomadas lleno.");
-            return;
-        }
-        title("NUEVA POMADA");
-        Object[] c = readCommonFields();
-        int grams = readInt("  Gramos en el tubo          : ");
-        ointments[ointCount++] = new Ointment(
-                (String) c[0], (String) c[1], (boolean) c[2], (int) c[3],
-                (double) c[4], (double) c[5], (LocalDate) c[6], (LocalDate) c[7], grams);
-        System.out.println("  ✔ Pomada registrada.");
-    }
-
-    // ══════════════════════════ 2. BORRAR ═══════════════════════════════════
-    static void menuDelete() {
-        title("BORRAR MEDICAMENTO");
-        System.out.println("  a) Pastilla   b) Jarabe   c) Pomada");
-        String op = readString("  Seleccione: ").toLowerCase();
-        switch (op) {
-            case "a" -> deletePill();
-            case "b" -> deleteSyrup();
-            case "c" -> deleteOintment();
-            default -> System.out.println("  Opción no válida.");
-        }
-    }
-
-    static void deletePill() {
-        String name = readString("  Nombre de la pastilla a eliminar: ");
-        for (int i = 0; i < pillCount; i++) {
-            if (pills[i].getMedicineName().equalsIgnoreCase(name)) {
-                System.out.println("\n  Encontrado:\n  " + compactPill(pills[i]));
-                if (!readYesNo("\n  ¿Confirma eliminar?")) {
-                    System.out.println("  Cancelado.");
-                    return;
+                if (lineaExtra.contains("TABLETAS")) {
+                    int tabletas = Integer.parseInt(lineaExtra.split(" ")[0]);
+                    double miligramos = Double.parseDouble(lector.nextLine().trim().split(" ")[0]);
+                    pastillas[numPastillas] = new Pill(nombre, laboratorio, esGenerico, codigoBarras, costo, precio, fechaFab, fechaCad, tabletas, miligramos);
+                    numPastillas++;
+                } else if (lineaExtra.contains("ML")) {
+                    int mililitros = Integer.parseInt(lineaExtra.split(" ")[0]);
+                    boolean vaso = Boolean.parseBoolean(lector.nextLine().trim());
+                    jarabes[numJarabes] = new Syrup(nombre, laboratorio, esGenerico, codigoBarras, costo, precio, fechaFab, fechaCad, mililitros, vaso);
+                    numJarabes++;
+                } else if (lineaExtra.contains("GRAMOS")) {
+                    int gramos = Integer.parseInt(lineaExtra.split(" ")[0]);
+                    pomadas[numPomadas] = new Ointment(nombre, laboratorio, esGenerico, codigoBarras, costo, precio, fechaFab, fechaCad, gramos);
+                    numPomadas++;
                 }
-                for (int j = i; j < pillCount - 1; j++) pills[j] = pills[j + 1];
-                pills[--pillCount] = null;
-                System.out.println("  ✔ Pastilla eliminada.");
+            }
+
+            lector.close();
+            System.out.println("Archivo cargado correctamente.");
+
+        } catch (FileNotFoundException e) {
+            System.out.println("Archivo no encontrado: " + nombreArchivo);
+        }
+    }
+
+    static void menuIngresar() {
+        System.out.println("\na) Pastilla   b) Jarabe   c) Pomada");
+        System.out.print("Seleccione: ");
+        String op = sc.nextLine();
+
+        switch (op) {
+            case "a": ingresarPastilla(); break;
+            case "b": ingresarJarabe(); break;
+            case "c": ingresarPomada(); break;
+            default: System.out.println("Opcion no valida.");
+        }
+    }
+
+    static void ingresarPastilla() {
+        if (numPastillas >= pastillas.length) {
+            System.out.println("Inventario de pastillas lleno.");
+            return;
+        }
+        System.out.print("Nombre: ");
+        String nombre = sc.nextLine();
+        System.out.print("Laboratorio: ");
+        String laboratorio = sc.nextLine();
+        System.out.print("Es generico? (true/false): ");
+        boolean esGenerico = Boolean.parseBoolean(sc.nextLine());
+        System.out.print("Codigo de barras: ");
+        int codigoBarras = Integer.parseInt(sc.nextLine());
+        System.out.print("Costo: ");
+        double costo = Double.parseDouble(sc.nextLine());
+        System.out.print("Precio publico: ");
+        double precio = Double.parseDouble(sc.nextLine());
+        System.out.print("Fecha fabricacion (yyyy-MM-dd): ");
+        LocalDate fechaFab = LocalDate.parse(sc.nextLine());
+        System.out.print("Fecha caducidad (yyyy-MM-dd): ");
+        LocalDate fechaCad = LocalDate.parse(sc.nextLine());
+        System.out.print("Numero de tabletas: ");
+        int tabletas = Integer.parseInt(sc.nextLine());
+        System.out.print("Miligramos: ");
+        double miligramos = Double.parseDouble(sc.nextLine());
+
+        pastillas[numPastillas] = new Pill(nombre, laboratorio, esGenerico, codigoBarras, costo, precio, fechaFab, fechaCad, tabletas, miligramos);
+        numPastillas++;
+        System.out.println("Pastilla agregada correctamente.");
+    }
+
+    static void ingresarJarabe() {
+        if (numJarabes >= jarabes.length) {
+            System.out.println("Inventario de jarabes lleno.");
+            return;
+        }
+        System.out.print("Nombre: ");
+        String nombre = sc.nextLine();
+        System.out.print("Laboratorio: ");
+        String laboratorio = sc.nextLine();
+        System.out.print("Es generico? (true/false): ");
+        boolean esGenerico = Boolean.parseBoolean(sc.nextLine());
+        System.out.print("Codigo de barras: ");
+        int codigoBarras = Integer.parseInt(sc.nextLine());
+        System.out.print("Costo: ");
+        double costo = Double.parseDouble(sc.nextLine());
+        System.out.print("Precio publico: ");
+        double precio = Double.parseDouble(sc.nextLine());
+        System.out.print("Fecha fabricacion (yyyy-MM-dd): ");
+        LocalDate fechaFab = LocalDate.parse(sc.nextLine());
+        System.out.print("Fecha caducidad (yyyy-MM-dd): ");
+        LocalDate fechaCad = LocalDate.parse(sc.nextLine());
+        System.out.print("Mililitros: ");
+        int mililitros = Integer.parseInt(sc.nextLine());
+        System.out.print("Incluye vaso dosificador? (true/false): ");
+        boolean vaso = Boolean.parseBoolean(sc.nextLine());
+
+        jarabes[numJarabes] = new Syrup(nombre, laboratorio, esGenerico, codigoBarras, costo, precio, fechaFab, fechaCad, mililitros, vaso);
+        numJarabes++;
+        System.out.println("Jarabe agregado correctamente.");
+    }
+
+    static void ingresarPomada() {
+        if (numPomadas >= pomadas.length) {
+            System.out.println("Inventario de pomadas lleno.");
+            return;
+        }
+        System.out.print("Nombre: ");
+        String nombre = sc.nextLine();
+        System.out.print("Laboratorio: ");
+        String laboratorio = sc.nextLine();
+        System.out.print("Es generico? (true/false): ");
+        boolean esGenerico = Boolean.parseBoolean(sc.nextLine());
+        System.out.print("Codigo de barras: ");
+        int codigoBarras = Integer.parseInt(sc.nextLine());
+        System.out.print("Costo: ");
+        double costo = Double.parseDouble(sc.nextLine());
+        System.out.print("Precio publico: ");
+        double precio = Double.parseDouble(sc.nextLine());
+        System.out.print("Fecha fabricacion (yyyy-MM-dd): ");
+        LocalDate fechaFab = LocalDate.parse(sc.nextLine());
+        System.out.print("Fecha caducidad (yyyy-MM-dd): ");
+        LocalDate fechaCad = LocalDate.parse(sc.nextLine());
+        System.out.print("Gramos: ");
+        int gramos = Integer.parseInt(sc.nextLine());
+
+        pomadas[numPomadas] = new Ointment(nombre, laboratorio, esGenerico, codigoBarras, costo, precio, fechaFab, fechaCad, gramos);
+        numPomadas++;
+        System.out.println("Pomada agregada correctamente.");
+    }
+
+    static void menuBorrar() {
+        System.out.println("\na) Pastilla   b) Jarabe   c) Pomada");
+        System.out.print("Seleccione: ");
+        String op = sc.nextLine();
+
+        switch (op) {
+            case "a": borrarPastilla(); break;
+            case "b": borrarJarabe(); break;
+            case "c": borrarPomada(); break;
+            default: System.out.println("Opcion no valida.");
+        }
+    }
+
+    static void borrarPastilla() {
+        System.out.print("Nombre de la pastilla a borrar: ");
+        String nombre = sc.nextLine();
+        int posicion = -1;
+
+        for (int i = 0; i < numPastillas; i++) {
+            if (pastillas[i].getMedicineName().equalsIgnoreCase(nombre)) {
+                posicion = i;
+                break;
+            }
+        }
+
+        if (posicion == -1) {
+            System.out.println("No se encontro: " + nombre);
+            return;
+        }
+
+        System.out.println("Encontrado: " + pastillas[posicion].getMedicineName());
+        System.out.print("Confirma eliminar? (s/n): ");
+        String conf = sc.nextLine();
+
+        if (conf.equalsIgnoreCase("s")) {
+            for (int i = posicion; i < numPastillas - 1; i++) {
+                pastillas[i] = pastillas[i + 1];
+            }
+            pastillas[numPastillas - 1] = null;
+            numPastillas--;
+            System.out.println("Pastilla eliminada.");
+        } else {
+            System.out.println("Operacion cancelada.");
+        }
+    }
+
+    static void borrarJarabe() {
+        System.out.print("Nombre del jarabe a borrar: ");
+        String nombre = sc.nextLine();
+        int posicion = -1;
+
+        for (int i = 0; i < numJarabes; i++) {
+            if (jarabes[i].getMedicineName().equalsIgnoreCase(nombre)) {
+                posicion = i;
+                break;
+            }
+        }
+
+        if (posicion == -1) {
+            System.out.println("No se encontro: " + nombre);
+            return;
+        }
+
+        System.out.println("Encontrado: " + jarabes[posicion].getMedicineName());
+        System.out.print("Confirma eliminar? (s/n): ");
+        String conf = sc.nextLine();
+
+        if (conf.equalsIgnoreCase("s")) {
+            for (int i = posicion; i < numJarabes - 1; i++) {
+                jarabes[i] = jarabes[i + 1];
+            }
+            jarabes[numJarabes - 1] = null;
+            numJarabes--;
+            System.out.println("Jarabe eliminado.");
+        } else {
+            System.out.println("Operacion cancelada.");
+        }
+    }
+
+    static void borrarPomada() {
+        System.out.print("Nombre de la pomada a borrar: ");
+        String nombre = sc.nextLine();
+        int posicion = -1;
+
+        for (int i = 0; i < numPomadas; i++) {
+            if (pomadas[i].getMedicineName().equalsIgnoreCase(nombre)) {
+                posicion = i;
+                break;
+            }
+        }
+
+        if (posicion == -1) {
+            System.out.println("No se encontro: " + nombre);
+            return;
+        }
+
+        System.out.println("Encontrado: " + pomadas[posicion].getMedicineName());
+        System.out.print("Confirma eliminar? (s/n): ");
+        String conf = sc.nextLine();
+
+        if (conf.equalsIgnoreCase("s")) {
+            for (int i = posicion; i < numPomadas - 1; i++) {
+                pomadas[i] = pomadas[i + 1];
+            }
+            pomadas[numPomadas - 1] = null;
+            numPomadas--;
+            System.out.println("Pomada eliminada.");
+        } else {
+            System.out.println("Operacion cancelada.");
+        }
+    }
+
+    static void menuModificar() {
+        System.out.println("\na) Precio de una pastilla");
+        System.out.println("b) Precio de TODAS las pastillas (porcentaje del costo)");
+        System.out.println("c) Precio de un jarabe");
+        System.out.println("d) Precio de TODOS los jarabes (porcentaje del costo)");
+        System.out.println("e) Precio de una pomada");
+        System.out.println("f) Precio de TODAS las pomadas (porcentaje del costo)");
+        System.out.print("Seleccione: ");
+        String op = sc.nextLine();
+
+        switch (op) {
+            case "a": modificarUnaPastilla(); break;
+            case "b": modificarTodasPastillas(); break;
+            case "c": modificarUnJarabe(); break;
+            case "d": modificarTodosJarabes(); break;
+            case "e": modificarUnaPomada(); break;
+            case "f": modificarTodasPomadas(); break;
+            default: System.out.println("Opcion no valida.");
+        }
+    }
+
+    static void modificarUnaPastilla() {
+        System.out.print("Nombre de la pastilla: ");
+        String nombre = sc.nextLine();
+
+        for (int i = 0; i < numPastillas; i++) {
+            if (pastillas[i].getMedicineName().equalsIgnoreCase(nombre)) {
+                System.out.println("Precio actual: " + pastillas[i].getMedicinePricePublic());
+                System.out.print("Nuevo precio: ");
+                double nuevoPrecio = Double.parseDouble(sc.nextLine());
+                System.out.print("Confirma el cambio? (s/n): ");
+                String conf = sc.nextLine();
+                if (conf.equalsIgnoreCase("s")) {
+                    pastillas[i].setMedicinePricePublic(nuevoPrecio);
+                    System.out.println("Precio actualizado.");
+                } else {
+                    System.out.println("Cancelado.");
+                }
                 return;
             }
         }
-        System.out.println("  No encontrado: " + name);
+        System.out.println("No se encontro: " + nombre);
     }
 
-    static void deleteSyrup() {
-        String name = readString("  Nombre del jarabe a eliminar: ");
-        for (int i = 0; i < syrupCount; i++) {
-            if (syrups[i].getMedicineName().equalsIgnoreCase(name)) {
-                System.out.println("\n  Encontrado:\n  " + compactSyrup(syrups[i]));
-                if (!readYesNo("\n  ¿Confirma eliminar?")) {
-                    System.out.println("  Cancelado.");
-                    return;
+    static void modificarTodasPastillas() {
+        System.out.print("Porcentaje sobre el costo (ej. 30 para 30%): ");
+        double porcentaje = Double.parseDouble(sc.nextLine());
+        System.out.print("Confirma modificar TODAS las pastillas? (s/n): ");
+        String conf = sc.nextLine();
+        if (conf.equalsIgnoreCase("s")) {
+            for (int i = 0; i < numPastillas; i++) {
+                pastillas[i].setMedicinePricePublic(pastillas[i].getMedicinePrice() * (1 + porcentaje / 100));
+            }
+            System.out.println("Precios actualizados.");
+        } else {
+            System.out.println("Cancelado.");
+        }
+    }
+
+    static void modificarUnJarabe() {
+        System.out.print("Nombre del jarabe: ");
+        String nombre = sc.nextLine();
+
+        for (int i = 0; i < numJarabes; i++) {
+            if (jarabes[i].getMedicineName().equalsIgnoreCase(nombre)) {
+                System.out.println("Precio actual: " + jarabes[i].getMedicinePricePublic());
+                System.out.print("Nuevo precio: ");
+                double nuevoPrecio = Double.parseDouble(sc.nextLine());
+                System.out.print("Confirma el cambio? (s/n): ");
+                String conf = sc.nextLine();
+                if (conf.equalsIgnoreCase("s")) {
+                    jarabes[i].setMedicinePricePublic(nuevoPrecio);
+                    System.out.println("Precio actualizado.");
+                } else {
+                    System.out.println("Cancelado.");
                 }
-                for (int j = i; j < syrupCount - 1; j++) syrups[j] = syrups[j + 1];
-                syrups[--syrupCount] = null;
-                System.out.println("  ✔ Jarabe eliminado.");
                 return;
             }
         }
-        System.out.println("  No encontrado: " + name);
+        System.out.println("No se encontro: " + nombre);
     }
 
-    static void deleteOintment() {
-        String name = readString("  Nombre de la pomada a eliminar: ");
-        for (int i = 0; i < ointCount; i++) {
-            if (ointments[i].getMedicineName().equalsIgnoreCase(name)) {
-                System.out.println("\n  Encontrado:\n  " + compactOintment(ointments[i]));
-                if (!readYesNo("\n  ¿Confirma eliminar?")) {
-                    System.out.println("  Cancelado.");
-                    return;
+    static void modificarTodosJarabes() {
+        System.out.print("Porcentaje sobre el costo (ej. 30 para 30%): ");
+        double porcentaje = Double.parseDouble(sc.nextLine());
+        System.out.print("Confirma modificar TODOS los jarabes? (s/n): ");
+        String conf = sc.nextLine();
+        if (conf.equalsIgnoreCase("s")) {
+            for (int i = 0; i < numJarabes; i++) {
+                jarabes[i].setMedicinePricePublic(jarabes[i].getMedicinePrice() * (1 + porcentaje / 100));
+            }
+            System.out.println("Precios actualizados.");
+        } else {
+            System.out.println("Cancelado.");
+        }
+    }
+
+    static void modificarUnaPomada() {
+        System.out.print("Nombre de la pomada: ");
+        String nombre = sc.nextLine();
+
+        for (int i = 0; i < numPomadas; i++) {
+            if (pomadas[i].getMedicineName().equalsIgnoreCase(nombre)) {
+                System.out.println("Precio actual: " + pomadas[i].getMedicinePricePublic());
+                System.out.print("Nuevo precio: ");
+                double nuevoPrecio = Double.parseDouble(sc.nextLine());
+                System.out.print("Confirma el cambio? (s/n): ");
+                String conf = sc.nextLine();
+                if (conf.equalsIgnoreCase("s")) {
+                    pomadas[i].setMedicinePricePublic(nuevoPrecio);
+                    System.out.println("Precio actualizado.");
+                } else {
+                    System.out.println("Cancelado.");
                 }
-                for (int j = i; j < ointCount - 1; j++) ointments[j] = ointments[j + 1];
-                ointments[--ointCount] = null;
-                System.out.println("  ✔ Pomada eliminada.");
                 return;
             }
         }
-        System.out.println("  No encontrado: " + name);
+        System.out.println("No se encontro: " + nombre);
     }
 
-    // ════════════════════════ 3. MODIFICAR ══════════════════════════════════
-    static void menuModify() {
-        title("MODIFICAR PRECIOS");
-        System.out.println("  a) Precio de una pastilla");
-        System.out.println("  b) Precio de TODAS las pastillas (% del costo)");
-        System.out.println("  c) Precio de un jarabe");
-        System.out.println("  d) Precio de TODOS los jarabes (% del costo)");
-        System.out.println("  e) Precio de una pomada");
-        System.out.println("  f) Precio de TODAS las pomadas (% del costo)");
-        String op = readString("  Seleccione: ").toLowerCase();
+    static void modificarTodasPomadas() {
+        System.out.print("Porcentaje sobre el costo (ej. 30 para 30%): ");
+        double porcentaje = Double.parseDouble(sc.nextLine());
+        System.out.print("Confirma modificar TODAS las pomadas? (s/n): ");
+        String conf = sc.nextLine();
+        if (conf.equalsIgnoreCase("s")) {
+            for (int i = 0; i < numPomadas; i++) {
+                pomadas[i].setMedicinePricePublic(pomadas[i].getMedicinePrice() * (1 + porcentaje / 100));
+            }
+            System.out.println("Precios actualizados.");
+        } else {
+            System.out.println("Cancelado.");
+        }
+    }
+
+    static void menuPatente() {
+        System.out.println("\na) Pastillas de patente");
+        System.out.println("b) Jarabes de patente");
+        System.out.println("c) Pomadas de patente");
+        System.out.println("d) Todos los medicamentos de patente");
+        System.out.print("Seleccione: ");
+        String op = sc.nextLine();
+
         switch (op) {
-            case "a" -> modifyOne("Pastilla");
-            case "b" -> modifyAll("Pastilla");
-            case "c" -> modifyOne("Jarabe");
-            case "d" -> modifyAll("Jarabe");
-            case "e" -> modifyOne("Pomada");
-            case "f" -> modifyAll("Pomada");
-            default -> System.out.println("  Opción no válida.");
+            case "a": imprimirPastillas(false); break;
+            case "b": imprimirJarabes(false); break;
+            case "c": imprimirPomadas(false); break;
+            case "d": imprimirPastillas(false); imprimirJarabes(false); imprimirPomadas(false); break;
+            default: System.out.println("Opcion no valida.");
         }
     }
 
-    static void modifyOne(String type) {
-        String name = readString("  Nombre del medicamento: ");
-        Medicine m = findByName(type, name);
-        if (m == null) {
-            System.out.println("  No encontrado.");
-            return;
-        }
-        System.out.printf("  Precio actual: $%.2f%n", m.getMedicinePricePublic());
-        double newPrice = readDouble("  Nuevo precio público: $");
-        if (!readYesNo("  ¿Confirma el cambio?")) {
-            System.out.println("  Cancelado.");
-            return;
-        }
-        m.setMedicinePricePublic(newPrice);
-        System.out.println("  ✔ Precio actualizado.");
-    }
+    static void menuGenerico() {
+        System.out.println("\na) Pastillas genericas");
+        System.out.println("b) Jarabes genericos");
+        System.out.println("c) Pomadas genericas");
+        System.out.println("d) Todos los medicamentos genericos");
+        System.out.print("Seleccione: ");
+        String op = sc.nextLine();
 
-    static void modifyAll(String type) {
-        double pct = readDouble("  Porcentaje sobre el costo (ej. 30 para +30%): ");
-        if (!readYesNo("  ¿Confirma modificar TODOS los " + type + "s?")) {
-            System.out.println("  Cancelado.");
-            return;
-        }
-        int n = 0;
-        switch (type) {
-            case "Pastilla" -> {
-                for (int i = 0; i < pillCount; i++) {
-                    pills[i].setMedicinePricePublic(pills[i].getMedicinePrice() * (1 + pct / 100));
-                    n++;
-                }
-            }
-            case "Jarabe" -> {
-                for (int i = 0; i < syrupCount; i++) {
-                    syrups[i].setMedicinePricePublic(syrups[i].getMedicinePrice() * (1 + pct / 100));
-                    n++;
-                }
-            }
-            case "Pomada" -> {
-                for (int i = 0; i < ointCount; i++) {
-                    ointments[i].setMedicinePricePublic(ointments[i].getMedicinePrice() * (1 + pct / 100));
-                    n++;
-                }
-            }
-        }
-        System.out.printf("  ✔ %d %ss actualizados con %.1f%% sobre el costo.%n", n, type, pct);
-    }
-
-    static Medicine findByName(String type, String name) {
-        return switch (type) {
-            case "Pastilla" -> {
-                for (int i = 0; i < pillCount; i++)
-                    if (pills[i].getMedicineName().equalsIgnoreCase(name)) yield pills[i];
-                yield null;
-            }
-            case "Jarabe" -> {
-                for (int i = 0; i < syrupCount; i++)
-                    if (syrups[i].getMedicineName().equalsIgnoreCase(name)) yield syrups[i];
-                yield null;
-            }
-            default -> {
-                for (int i = 0; i < ointCount; i++)
-                    if (ointments[i].getMedicineName().equalsIgnoreCase(name)) yield ointments[i];
-                yield null;
-            }
-        };
-    }
-
-    // ════════════════════ 4. IMPRIMIR PATENTE ═══════════════════════════════
-    static void menuPrintPatent() {
-        title("IMPRIMIR MEDICAMENTOS DE PATENTE");
-        System.out.println("  a) Pastillas");
-        System.out.println("  b) Jarabes");
-        System.out.println("  c) Pomadas");
-        System.out.println("  d) Todos los medicamentos de Patente");  // REPOSICIÓN
-        String op = readString("  Seleccione: ").toLowerCase();
         switch (op) {
-            case "a" -> printPills(false);
-            case "b" -> printSyrups(false);
-            case "c" -> printOintments(false);
-            case "d" -> printAllByType(false);   // REPOSICIÓN
-            default -> System.out.println("  Opción no válida.");
+            case "a": imprimirPastillas(true); break;
+            case "b": imprimirJarabes(true); break;
+            case "c": imprimirPomadas(true); break;
+            case "d": imprimirPastillas(true); imprimirJarabes(true); imprimirPomadas(true); break;
+            default: System.out.println("Opcion no valida.");
         }
     }
 
-    static void menuPrintGeneric() {
-        title("IMPRIMIR MEDICAMENTOS GENÉRICOS");
-        System.out.println("  a) Pastillas");
-        System.out.println("  b) Jarabes");
-        System.out.println("  c) Pomadas");
-        System.out.println("  d) Todos los medicamentos Genéricos");
-        String op = readString("  Seleccione: ").toLowerCase();
+    static void imprimirPastillas(boolean generico) {
+        System.out.println("\n------ PASTILLAS ------");
+        int contador = 0;
+        for (int i = 0; i < numPastillas; i++) {
+            if (pastillas[i].isGeneric() == generico) {
+                System.out.println(pastillas[i].toString());
+                System.out.println("---");
+                contador++;
+            }
+        }
+        if (contador == 0) System.out.println("No hay registros.");
+        System.out.println("Total: " + contador);
+    }
+
+    static void imprimirJarabes(boolean generico) {
+        System.out.println("\n------ JARABES ------");
+        int contador = 0;
+        for (int i = 0; i < numJarabes; i++) {
+            if (jarabes[i].isGeneric() == generico) {
+                System.out.println(jarabes[i].toString());
+                System.out.println("---");
+                contador++;
+            }
+        }
+        if (contador == 0) System.out.println("No hay registros.");
+        System.out.println("Total: " + contador);
+    }
+
+    static void imprimirPomadas(boolean generico) {
+        System.out.println("\n------ POMADAS ------");
+        int contador = 0;
+        for (int i = 0; i < numPomadas; i++) {
+            if (pomadas[i].isGeneric() == generico) {
+                System.out.println(pomadas[i].toString());
+                System.out.println("---");
+                contador++;
+            }
+        }
+        if (contador == 0) System.out.println("No hay registros.");
+        System.out.println("Total: " + contador);
+    }
+
+    static void menuResumen() {
+        System.out.println("\na) Resumen de medicamentos de patente");
+        System.out.println("b) Resumen de medicamentos genericos");
+        System.out.println("c) Resumen total");
+        System.out.print("Seleccione: ");
+        String op = sc.nextLine();
+
         switch (op) {
-            case "a" -> printPills(true);
-            case "b" -> printSyrups(true);
-            case "c" -> printOintments(true);
-            case "d" -> printAllByType(true);
-            default -> System.out.println("  Opción no válida.");
+            case "a": imprimirResumen(false); break;
+            case "b": imprimirResumen(true); break;
+            case "c": imprimirResumenTotal(); break;
+            default: System.out.println("Opcion no valida.");
         }
     }
 
-    static void printPills(boolean generic) {
-        String label = generic ? "GENÉRICAS" : "PATENTE";
-        title("PASTILLAS – " + label);
-        int count = 0;
-        for (int i = 0; i < pillCount; i++) {
-            if (pills[i].isGeneric() == generic) {
-                System.out.println("  " + compactPill(pills[i]));
-                count++;
+    static void imprimirResumen(boolean generico) {
+        int numP = 0, numJ = 0, numPom = 0;
+        double costoP = 0, costoJ = 0, costoPom = 0;
+        double precioP = 0, precioJ = 0, precioPom = 0;
+
+        for (int i = 0; i < numPastillas; i++) {
+            if (pastillas[i].isGeneric() == generico) {
+                numP++;
+                costoP += pastillas[i].getMedicinePrice();
+                precioP += pastillas[i].getMedicinePricePublic();
             }
         }
-        if (count == 0) System.out.println("  (Sin registros)");
-        line();
-        System.out.println("  Total: " + count);
-    }
-
-    static void printSyrups(boolean generic) {
-        String label = generic ? "GENÉRICOS" : "PATENTE";
-        title("JARABES – " + label);
-        int count = 0;
-        for (int i = 0; i < syrupCount; i++) {
-            if (syrups[i].isGeneric() == generic) {
-                System.out.println("  " + compactSyrup(syrups[i]));
-                count++;
+        for (int i = 0; i < numJarabes; i++) {
+            if (jarabes[i].isGeneric() == generico) {
+                numJ++;
+                costoJ += jarabes[i].getMedicinePrice();
+                precioJ += jarabes[i].getMedicinePricePublic();
             }
         }
-        if (count == 0) System.out.println("  (Sin registros)");
-        line();
-        System.out.println("  Total: " + count);
-    }
-
-    static void printOintments(boolean generic) {
-        String label = generic ? "GENÉRICAS" : "PATENTE";
-        title("POMADAS – " + label);
-        int count = 0;
-        for (int i = 0; i < ointCount; i++) {
-            if (ointments[i].isGeneric() == generic) {
-                System.out.println("  " + compactOintment(ointments[i]));
-                count++;
+        for (int i = 0; i < numPomadas; i++) {
+            if (pomadas[i].isGeneric() == generico) {
+                numPom++;
+                costoPom += pomadas[i].getMedicinePrice();
+                precioPom += pomadas[i].getMedicinePricePublic();
             }
         }
-        if (count == 0) System.out.println("  (Sin registros)");
-        line();
-        System.out.println("  Total: " + count);
+
+        System.out.println("\n========== RESUMEN ==========");
+        System.out.println("Pastillas : " + numP + " | Costo: " + costoP + " | Precio: " + precioP);
+        System.out.println("Jarabes   : " + numJ + " | Costo: " + costoJ + " | Precio: " + precioJ);
+        System.out.println("Pomadas   : " + numPom + " | Costo: " + costoPom + " | Precio: " + precioPom);
+        System.out.println("-----------------------------");
+        System.out.println("Total medicamentos : " + (numP + numJ + numPom));
+        System.out.println("Total costo        : " + (costoP + costoJ + costoPom));
+        System.out.println("Total precio       : " + (precioP + precioJ + precioPom));
     }
 
-    static void printAllByType(boolean generic) {
-        String label = generic ? "GENÉRICOS" : "PATENTE";
-        title("TODOS LOS MEDICAMENTOS DE " + label);
-        System.out.println("  -- PASTILLAS --");
-        int total = 0, c;
-        c = 0;
-        for (int i = 0; i < pillCount; i++)
-            if (pills[i].isGeneric() == generic) {
-                System.out.println("  " + compactPill(pills[i]));
-                c++;
-            }
-        total += c;
-        System.out.println("  Subtotal: " + c);
-        System.out.println("\n  -- JARABES --");
-        c = 0;
-        for (int i = 0; i < syrupCount; i++)
-            if (syrups[i].isGeneric() == generic) {
-                System.out.println("  " + compactSyrup(syrups[i]));
-                c++;
-            }
-        total += c;
-        System.out.println("  Subtotal: " + c);
-        System.out.println("\n  -- POMADAS --");
-        c = 0;
-        for (int i = 0; i < ointCount; i++)
-            if (ointments[i].isGeneric() == generic) {
-                System.out.println("  " + compactOintment(ointments[i]));
-                c++;
-            }
-        total += c;
-        System.out.println("  Subtotal: " + c);
-        line();
-        System.out.println("  TOTAL GENERAL: " + total);
+    static void imprimirResumenTotal() {
+        int numP = 0, numJ = 0, numPom = 0;
+        double costoP = 0, costoJ = 0, costoPom = 0;
+        double precioP = 0, precioJ = 0, precioPom = 0;
+
+        for (int i = 0; i < numPastillas; i++) {
+            numP++;
+            costoP += pastillas[i].getMedicinePrice();
+            precioP += pastillas[i].getMedicinePricePublic();
+        }
+        for (int i = 0; i < numJarabes; i++) {
+            numJ++;
+            costoJ += jarabes[i].getMedicinePrice();
+            precioJ += jarabes[i].getMedicinePricePublic();
+        }
+        for (int i = 0; i < numPomadas; i++) {
+            numPom++;
+            costoPom += pomadas[i].getMedicinePrice();
+            precioPom += pomadas[i].getMedicinePricePublic();
+        }
+
+        System.out.println("\n========== RESUMEN TOTAL ==========");
+        System.out.println("Pastillas : " + numP + " | Costo: " + costoP + " | Precio: " + precioP);
+        System.out.println("Jarabes   : " + numJ + " | Costo: " + costoJ + " | Precio: " + precioJ);
+        System.out.println("Pomadas   : " + numPom + " | Costo: " + costoPom + " | Precio: " + precioPom);
+        System.out.println("----------------------------------");
+        System.out.println("Total medicamentos : " + (numP + numJ + numPom));
+        System.out.println("Total costo        : " + (costoP + costoJ + costoPom));
+        System.out.println("Total precio       : " + (precioP + precioJ + precioPom));
     }
 
-    static void menuSummary() {
-        title("RESUMEN");
-        System.out.println("  a) Medicamentos de Patente");
-        System.out.println("  b) Medicamentos Genéricos");
-        System.out.println("  c) Resumen total (todos)");
-        String op = readString("  Seleccione: ").toLowerCase();
+    static void menuBuscar() {
+        System.out.println("\na) Por nombre");
+        System.out.println("b) Por codigo de barras");
+        System.out.println("c) Por anio de fabricacion");
+        System.out.println("d) Medicamentos caducados");
+        System.out.println("e) Entre dos fechas");
+        System.out.print("Seleccione: ");
+        String op = sc.nextLine();
+
         switch (op) {
-            case "a" -> printSummary(false);
-            case "b" -> printSummary(true);
-            case "c" -> printTotalSummary();
-            default -> System.out.println("  Opción no válida.");
+            case "a": buscarPorNombre(); break;
+            case "b": buscarPorCodigo(); break;
+            case "c": buscarPorAnio(); break;
+            case "d": buscarCaducados(); break;
+            case "e": buscarEntreFechas(); break;
+            default: System.out.println("Opcion no valida.");
         }
     }
 
-    static void printSummary(boolean generic) {
-        String label = generic ? "GENÉRICOS" : "PATENTE";
-        title("RESUMEN – " + label);
-        int[] cnt = new int[3];
-        double[] costs = new double[3];
-        double[] prices = new double[3];
+    static void buscarPorNombre() {
+        System.out.print("Nombre a buscar: ");
+        String nombre = sc.nextLine();
+        int encontrados = 0;
 
-        for (int i = 0; i < pillCount; i++)
-            if (pills[i].isGeneric() == generic) {
-                cnt[0]++;
-                costs[0] += pills[i].getMedicinePrice();
-                prices[0] += pills[i].getMedicinePricePublic();
+        for (int i = 0; i < numPastillas; i++) {
+            if (pastillas[i].getMedicineName().toLowerCase().contains(nombre.toLowerCase())) {
+                System.out.println("\n[Pastilla]\n" + pastillas[i].toString());
+                encontrados++;
             }
-        for (int i = 0; i < syrupCount; i++)
-            if (syrups[i].isGeneric() == generic) {
-                cnt[1]++;
-                costs[1] += syrups[i].getMedicinePrice();
-                prices[1] += syrups[i].getMedicinePricePublic();
+        }
+        for (int i = 0; i < numJarabes; i++) {
+            if (jarabes[i].getMedicineName().toLowerCase().contains(nombre.toLowerCase())) {
+                System.out.println("\n[Jarabe]\n" + jarabes[i].toString());
+                encontrados++;
             }
-        for (int i = 0; i < ointCount; i++)
-            if (ointments[i].isGeneric() == generic) {
-                cnt[2]++;
-                costs[2] += ointments[i].getMedicinePrice();
-                prices[2] += ointments[i].getMedicinePricePublic();
+        }
+        for (int i = 0; i < numPomadas; i++) {
+            if (pomadas[i].getMedicineName().toLowerCase().contains(nombre.toLowerCase())) {
+                System.out.println("\n[Pomada]\n" + pomadas[i].toString());
+                encontrados++;
             }
+        }
 
-        System.out.printf("  %-12s | %5s | %12s | %12s%n", "Tipo", "Cant", "Suma Costos", "Suma Precios");
-        line();
-        System.out.printf("  %-12s | %5d | $%11.2f | $%11.2f%n", "Pastillas", cnt[0], costs[0], prices[0]);
-        System.out.printf("  %-12s | %5d | $%11.2f | $%11.2f%n", "Jarabes", cnt[1], costs[1], prices[1]);
-        System.out.printf("  %-12s | %5d | $%11.2f | $%11.2f%n", "Pomadas", cnt[2], costs[2], prices[2]);
-        line();
-        System.out.printf("  %-12s | %5d | $%11.2f | $%11.2f%n", "TOTAL",
-                cnt[0] + cnt[1] + cnt[2], costs[0] + costs[1] + costs[2], prices[0] + prices[1] + prices[2]);
+        if (encontrados == 0) System.out.println("No se encontro ningun medicamento con ese nombre.");
+        else System.out.println("\nEncontrados: " + encontrados);
     }
 
-    static void printTotalSummary() {
-        title("RESUMEN TOTAL – TODOS LOS MEDICAMENTOS");
-        int[] cnt = new int[3];
-        double[] costs = new double[3];
-        double[] prices = new double[3];
+    static void buscarPorCodigo() {
+        System.out.print("Codigo de barras: ");
+        int codigo = Integer.parseInt(sc.nextLine());
+        int encontrados = 0;
 
-        for (int i = 0; i < pillCount; i++) {
-            cnt[0]++;
-            costs[0] += pills[i].getMedicinePrice();
-            prices[0] += pills[i].getMedicinePricePublic();
+        for (int i = 0; i < numPastillas; i++) {
+            if (pastillas[i].getBarCode() == codigo) {
+                System.out.println("\n[Pastilla]\n" + pastillas[i].toString());
+                encontrados++;
+            }
         }
-        for (int i = 0; i < syrupCount; i++) {
-            cnt[1]++;
-            costs[1] += syrups[i].getMedicinePrice();
-            prices[1] += syrups[i].getMedicinePricePublic();
+        for (int i = 0; i < numJarabes; i++) {
+            if (jarabes[i].getBarCode() == codigo) {
+                System.out.println("\n[Jarabe]\n" + jarabes[i].toString());
+                encontrados++;
+            }
         }
-        for (int i = 0; i < ointCount; i++) {
-            cnt[2]++;
-            costs[2] += ointments[i].getMedicinePrice();
-            prices[2] += ointments[i].getMedicinePricePublic();
+        for (int i = 0; i < numPomadas; i++) {
+            if (pomadas[i].getBarCode() == codigo) {
+                System.out.println("\n[Pomada]\n" + pomadas[i].toString());
+                encontrados++;
+            }
         }
 
-        System.out.printf("  %-12s | %5s | %12s | %12s%n", "Tipo", "Cant", "Suma Costos", "Suma Precios");
-        line();
-        System.out.printf("  %-12s | %5d | $%11.2f | $%11.2f%n", "Pastillas", cnt[0], costs[0], prices[0]);
-        System.out.printf("  %-12s | %5d | $%11.2f | $%11.2f%n", "Jarabes", cnt[1], costs[1], prices[1]);
-        System.out.printf("  %-12s | %5d | $%11.2f | $%11.2f%n", "Pomadas", cnt[2], costs[2], prices[2]);
-        line();
-        System.out.printf("  %-12s | %5d | $%11.2f | $%11.2f%n", "TOTAL",
-                cnt[0] + cnt[1] + cnt[2], costs[0] + costs[1] + costs[2], prices[0] + prices[1] + prices[2]);
+        if (encontrados == 0) System.out.println("No se encontro ningun medicamento con ese codigo.");
+        else System.out.println("\nEncontrados: " + encontrados);
     }
 
-    static void menuSearch() {
-        title("BUSCAR MEDICAMENTO");
-        System.out.println("  a) Por nombre (formato amplio)");
-        System.out.println("  b) Por código de barras (formato amplio)");
-        System.out.println("  c) Por año de fabricación (formato compacto)");
-        System.out.println("  d) Medicamentos caducados (formato compacto)");
-        System.out.println("  e) Entre dos fechas (formato compacto)");
-        String op = readString("  Seleccione: ").toLowerCase();
-        switch (op) {
-            case "a" -> searchByName();
-            case "b" -> searchByBarCode();
-            case "c" -> searchByYear();
-            case "d" -> searchExpired();
-            case "e" -> searchBetweenDates();
-            default -> System.out.println("  Opción no válida.");
-        }
-    }
+    static void buscarPorAnio() {
+        System.out.print("Anio de fabricacion: ");
+        int anio = Integer.parseInt(sc.nextLine());
+        int encontrados = 0;
 
-    static void searchByName() {
-        String name = readString("  Nombre a buscar: ");
-        title("RESULTADOS – NOMBRE CONTIENE: \"" + name + "\"");
-        int found = 0;
-        for (int i = 0; i < pillCount; i++)
-            if (pills[i].getMedicineName().toLowerCase().contains(name.toLowerCase())) {
-                System.out.println("\n[Pastilla]\n" + pills[i].toString());
-                found++;
-            }
-        for (int i = 0; i < syrupCount; i++)
-            if (syrups[i].getMedicineName().toLowerCase().contains(name.toLowerCase())) {
-                System.out.println("\n[Jarabe]\n" + syrups[i].toString());
-                found++;
-            }
-        for (int i = 0; i < ointCount; i++)
-            if (ointments[i].getMedicineName().toLowerCase().contains(name.toLowerCase())) {
-                System.out.println("\n[Pomada]\n" + ointments[i].toString());
-                found++;
-            }
-        printFoundCount(found);
-    }
-
-    static void searchByBarCode() {
-        int code = readInt("  Código de barras: ");
-        title("RESULTADOS – CÓDIGO: " + code);
-        int found = 0;
-        for (int i = 0; i < pillCount; i++)
-            if (pills[i].getBarCode() == code) {
-                System.out.println("\n[Pastilla]\n" + pills[i].toString());
-                found++;
-            }
-        for (int i = 0; i < syrupCount; i++)
-            if (syrups[i].getBarCode() == code) {
-                System.out.println("\n[Jarabe]\n" + syrups[i].toString());
-                found++;
-            }
-        for (int i = 0; i < ointCount; i++)
-            if (ointments[i].getBarCode() == code) {
-                System.out.println("\n[Pomada]\n" + ointments[i].toString());
-                found++;
-            }
-        printFoundCount(found);
-    }
-
-    static void searchByYear() {
-        int year = readInt("  Año de fabricación: ");
-        title("MEDICAMENTOS FABRICADOS EN " + year);
-        int found = 0;
-        for (int i = 0; i < pillCount; i++)
-            if (pills[i].getManufacturingDate().getYear() == year) {
-                System.out.println("  " + compactPill(pills[i]));
-                found++;
-            }
-        for (int i = 0; i < syrupCount; i++)
-            if (syrups[i].getManufacturingDate().getYear() == year) {
-                System.out.println("  " + compactSyrup(syrups[i]));
-                found++;
-            }
-        for (int i = 0; i < ointCount; i++)
-            if (ointments[i].getManufacturingDate().getYear() == year) {
-                System.out.println("  " + compactOintment(ointments[i]));
-                found++;
-            }
-        printFoundCount(found);
-    }
-
-    static void searchExpired() {
-        title("MEDICAMENTOS CADUCADOS");
-        LocalDate today = LocalDate.now();
-        int found = 0;
-        for (int i = 0; i < pillCount; i++)
-            if (pills[i].getExpirationDate().isBefore(today)) {
-                System.out.println("  " + compactPill(pills[i]));
-                found++;
-            }
-        for (int i = 0; i < syrupCount; i++)
-            if (syrups[i].getExpirationDate().isBefore(today)) {
-                System.out.println("  " + compactSyrup(syrups[i]));
-                found++;
-            }
-        for (int i = 0; i < ointCount; i++)
-            if (ointments[i].getExpirationDate().isBefore(today)) {
-                System.out.println("  " + compactOintment(ointments[i]));
-                found++;
-            }
-        if (found == 0) System.out.println("  No hay medicamentos caducados.");
-        else {
-            line();
-            System.out.println("  Total caducados: " + found);
-        }
-    }
-
-    static void searchBetweenDates() {
-        title("BUSCAR ENTRE DOS FECHAS DE FABRICACIÓN");
-        LocalDate from = readDate("  Fecha INICIO");
-        LocalDate to = readDate("  Fecha FIN   ");
-        if (from.isAfter(to)) {
-            System.out.println("  La fecha inicio debe ser anterior a la fecha fin.");
-            return;
-        }
-        int found = 0;
-        for (int i = 0; i < pillCount; i++) {
-            LocalDate d = pills[i].getManufacturingDate();
-            if (!d.isBefore(from) && !d.isAfter(to)) {
-                System.out.println("  " + compactPill(pills[i]));
-                found++;
+        for (int i = 0; i < numPastillas; i++) {
+            if (pastillas[i].getManufacturingDate().getYear() == anio) {
+                System.out.println("[Pastilla] " + pastillas[i].getMedicineName() + " | " + pastillas[i].getManufacturingDate() + " | $" + pastillas[i].getMedicinePricePublic());
+                encontrados++;
             }
         }
-        for (int i = 0; i < syrupCount; i++) {
-            LocalDate d = syrups[i].getManufacturingDate();
-            if (!d.isBefore(from) && !d.isAfter(to)) {
-                System.out.println("  " + compactSyrup(syrups[i]));
-                found++;
+        for (int i = 0; i < numJarabes; i++) {
+            if (jarabes[i].getManufacturingDate().getYear() == anio) {
+                System.out.println("[Jarabe] " + jarabes[i].getMedicineName() + " | " + jarabes[i].getManufacturingDate() + " | $" + jarabes[i].getMedicinePricePublic());
+                encontrados++;
             }
         }
-        for (int i = 0; i < ointCount; i++) {
-            LocalDate d = ointments[i].getManufacturingDate();
-            if (!d.isBefore(from) && !d.isAfter(to)) {
-                System.out.println("  " + compactOintment(ointments[i]));
-                found++;
+        for (int i = 0; i < numPomadas; i++) {
+            if (pomadas[i].getManufacturingDate().getYear() == anio) {
+                System.out.println("[Pomada] " + pomadas[i].getMedicineName() + " | " + pomadas[i].getManufacturingDate() + " | $" + pomadas[i].getMedicinePricePublic());
+                encontrados++;
             }
         }
-        printFoundCount(found);
+
+        if (encontrados == 0) System.out.println("No se encontraron medicamentos de ese anio.");
+        else System.out.println("\nEncontrados: " + encontrados);
     }
 
-    static void printFoundCount(int found) {
-        if (found == 0) System.out.println("  Sin resultados.");
-        else {
-            line();
-            System.out.println("  Encontrados: " + found);
+    static void buscarCaducados() {
+        LocalDate hoy = LocalDate.now();
+        int encontrados = 0;
+        System.out.println("\n------ MEDICAMENTOS CADUCADOS ------");
+
+        for (int i = 0; i < numPastillas; i++) {
+            if (pastillas[i].getExpirationDate().isBefore(hoy)) {
+                System.out.println("[Pastilla] " + pastillas[i].getMedicineName() + " | Caduca: " + pastillas[i].getExpirationDate() + " | $" + pastillas[i].getMedicinePricePublic());
+                encontrados++;
+            }
         }
+        for (int i = 0; i < numJarabes; i++) {
+            if (jarabes[i].getExpirationDate().isBefore(hoy)) {
+                System.out.println("[Jarabe] " + jarabes[i].getMedicineName() + " | Caduca: " + jarabes[i].getExpirationDate() + " | $" + jarabes[i].getMedicinePricePublic());
+                encontrados++;
+            }
+        }
+        for (int i = 0; i < numPomadas; i++) {
+            if (pomadas[i].getExpirationDate().isBefore(hoy)) {
+                System.out.println("[Pomada] " + pomadas[i].getMedicineName() + " | Caduca: " + pomadas[i].getExpirationDate() + " | $" + pomadas[i].getMedicinePricePublic());
+                encontrados++;
+            }
+        }
+
+        if (encontrados == 0) System.out.println("No hay medicamentos caducados.");
+        else System.out.println("\nTotal caducados: " + encontrados);
     }
 
-    static void menuSort() {
-        title("ORDENAR E IMPRIMIR – MÉTODO BURBUJA");
-        System.out.println("  a) Pastillas");
-        System.out.println("  b) Jarabes");
-        System.out.println("  c) Pomadas");
-        System.out.println("  d) Todos los medicamentos por fecha de fabricación (asc)");
-        String op = readString("  Seleccione: ").toLowerCase();
+    static void buscarEntreFechas() {
+        System.out.print("Fecha inicio (yyyy-MM-dd): ");
+        LocalDate fechaInicio = LocalDate.parse(sc.nextLine());
+        System.out.print("Fecha fin (yyyy-MM-dd): ");
+        LocalDate fechaFin = LocalDate.parse(sc.nextLine());
+        int encontrados = 0;
+
+        for (int i = 0; i < numPastillas; i++) {
+            LocalDate fecha = pastillas[i].getManufacturingDate();
+            if (!fecha.isBefore(fechaInicio) && !fecha.isAfter(fechaFin)) {
+                System.out.println("[Pastilla] " + pastillas[i].getMedicineName() + " | " + fecha + " | $" + pastillas[i].getMedicinePricePublic());
+                encontrados++;
+            }
+        }
+        for (int i = 0; i < numJarabes; i++) {
+            LocalDate fecha = jarabes[i].getManufacturingDate();
+            if (!fecha.isBefore(fechaInicio) && !fecha.isAfter(fechaFin)) {
+                System.out.println("[Jarabe] " + jarabes[i].getMedicineName() + " | " + fecha + " | $" + jarabes[i].getMedicinePricePublic());
+                encontrados++;
+            }
+        }
+        for (int i = 0; i < numPomadas; i++) {
+            LocalDate fecha = pomadas[i].getManufacturingDate();
+            if (!fecha.isBefore(fechaInicio) && !fecha.isAfter(fechaFin)) {
+                System.out.println("[Pomada] " + pomadas[i].getMedicineName() + " | " + fecha + " | $" + pomadas[i].getMedicinePricePublic());
+                encontrados++;
+            }
+        }
+
+        if (encontrados == 0) System.out.println("No se encontraron medicamentos en ese rango.");
+        else System.out.println("\nEncontrados: " + encontrados);
+    }
+
+    // -----------------------------------------------
+    // 8. ORDENAR (BURBUJA)
+    // -----------------------------------------------
+    static void menuOrdenar() {
+        System.out.println("\na) Pastillas");
+        System.out.println("b) Jarabes");
+        System.out.println("c) Pomadas");
+        System.out.println("d) Todos por fecha de fabricacion (ascendente)");
+        System.out.print("Seleccione: ");
+        String op = sc.nextLine();
+
         if (op.equals("d")) {
-            sortAllByDate();
+            ordenarTodosPorFecha();
             return;
         }
-        System.out.println("  1. Por nombre   2. Por precio");
-        int crit = readInt("  Criterio: ");
-        if (crit < 1 || crit > 2) {
-            System.out.println("  Criterio no válido.");
-            return;
-        }
+
+        System.out.println("1. Por nombre   2. Por precio");
+        System.out.print("Criterio: ");
+        int criterio = Integer.parseInt(sc.nextLine());
+
         switch (op) {
-            case "a" -> {
-                sortPills(crit);
-                printSortedPills();
-            }
-            case "b" -> {
-                sortSyrups(crit);
-                printSortedSyrups();
-            }
-            case "c" -> {
-                sortOintments(crit);
-                printSortedOintments();
-            }
-            default -> System.out.println("  Opción no válida.");
+            case "a":
+                ordenarPastillas(criterio);
+                System.out.println("\n------ PASTILLAS ORDENADAS ------");
+                for (int i = 0; i < numPastillas; i++) System.out.println(pastillas[i].toString() + "\n---");
+                break;
+            case "b":
+                ordenarJarabes(criterio);
+                System.out.println("\n------ JARABES ORDENADOS ------");
+                for (int i = 0; i < numJarabes; i++) System.out.println(jarabes[i].toString() + "\n---");
+                break;
+            case "c":
+                ordenarPomadas(criterio);
+                System.out.println("\n------ POMADAS ORDENADAS ------");
+                for (int i = 0; i < numPomadas; i++) System.out.println(pomadas[i].toString() + "\n---");
+                break;
+            default:
+                System.out.println("Opcion no valida.");
         }
     }
 
-    static void sortPills(int crit) {
-        for (int i = 0; i < pillCount - 1; i++)
-            for (int j = 0; j < pillCount - 1 - i; j++)
-                if (compareMed(pills[j], pills[j + 1], crit) > 0) {
-                    Pill tmp = pills[j];
-                    pills[j] = pills[j + 1];
-                    pills[j + 1] = tmp;
+    static void ordenarPastillas(int criterio) {
+        for (int i = 0; i < numPastillas - 1; i++) {
+            for (int j = 0; j < numPastillas - 1 - i; j++) {
+                boolean intercambiar = false;
+                if (criterio == 1) {
+                    intercambiar = pastillas[j].getMedicineName().compareToIgnoreCase(pastillas[j + 1].getMedicineName()) > 0;
+                } else {
+                    intercambiar = pastillas[j].getMedicinePricePublic() > pastillas[j + 1].getMedicinePricePublic();
                 }
-    }
-
-    static void sortSyrups(int crit) {
-        for (int i = 0; i < syrupCount - 1; i++)
-            for (int j = 0; j < syrupCount - 1 - i; j++)
-                if (compareMed(syrups[j], syrups[j + 1], crit) > 0) {
-                    Syrup tmp = syrups[j];
-                    syrups[j] = syrups[j + 1];
-                    syrups[j + 1] = tmp;
+                if (intercambiar) {
+                    Pill temp = pastillas[j];
+                    pastillas[j] = pastillas[j + 1];
+                    pastillas[j + 1] = temp;
                 }
+            }
+        }
     }
 
-    static void sortOintments(int crit) {
-        for (int i = 0; i < ointCount - 1; i++)
-            for (int j = 0; j < ointCount - 1 - i; j++)
-                if (compareMed(ointments[j], ointments[j + 1], crit) > 0) {
-                    Ointment tmp = ointments[j];
-                    ointments[j] = ointments[j + 1];
-                    ointments[j + 1] = tmp;
+    static void ordenarJarabes(int criterio) {
+        for (int i = 0; i < numJarabes - 1; i++) {
+            for (int j = 0; j < numJarabes - 1 - i; j++) {
+                boolean intercambiar = false;
+                if (criterio == 1) {
+                    intercambiar = jarabes[j].getMedicineName().compareToIgnoreCase(jarabes[j + 1].getMedicineName()) > 0;
+                } else {
+                    intercambiar = jarabes[j].getMedicinePricePublic() > jarabes[j + 1].getMedicinePricePublic();
                 }
+                if (intercambiar) {
+                    Syrup temp = jarabes[j];
+                    jarabes[j] = jarabes[j + 1];
+                    jarabes[j + 1] = temp;
+                }
+            }
+        }
     }
 
-    static int compareMed(Medicine a, Medicine b, int crit) {
-        if (crit == 1) return a.getMedicineName().compareToIgnoreCase(b.getMedicineName());
-        return Double.compare(a.getMedicinePricePublic(), b.getMedicinePricePublic());
+    static void ordenarPomadas(int criterio) {
+        for (int i = 0; i < numPomadas - 1; i++) {
+            for (int j = 0; j < numPomadas - 1 - i; j++) {
+                boolean intercambiar = false;
+                if (criterio == 1) {
+                    intercambiar = pomadas[j].getMedicineName().compareToIgnoreCase(pomadas[j + 1].getMedicineName()) > 0;
+                } else {
+                    intercambiar = pomadas[j].getMedicinePricePublic() > pomadas[j + 1].getMedicinePricePublic();
+                }
+                if (intercambiar) {
+                    Ointment temp = pomadas[j];
+                    pomadas[j] = pomadas[j + 1];
+                    pomadas[j + 1] = temp;
+                }
+            }
+        }
     }
 
-    static void sortAllByDate() {
-        title("TODOS LOS MEDICAMENTOS ORDENADOS POR FECHA DE FABRICACIÓN (ASC)");
-        int total = pillCount + syrupCount + ointCount;
-        Medicine[] all = new Medicine[total];
+    static void ordenarTodosPorFecha() {
+        int total = numPastillas + numJarabes + numPomadas;
+        Medicine[] todos = new Medicine[total];
         int k = 0;
-        for (int i = 0; i < pillCount; i++) all[k++] = pills[i];
-        for (int i = 0; i < syrupCount; i++) all[k++] = syrups[i];
-        for (int i = 0; i < ointCount; i++) all[k++] = ointments[i];
 
+        for (int i = 0; i < numPastillas; i++) { todos[k] = pastillas[i]; k++; }
+        for (int i = 0; i < numJarabes; i++)   { todos[k] = jarabes[i];   k++; }
+        for (int i = 0; i < numPomadas; i++)   { todos[k] = pomadas[i];   k++; }
 
-        for (int i = 0; i < total - 1; i++)
-            for (int j = 0; j < total - 1 - i; j++)
-                if (all[j].getManufacturingDate().isAfter(all[j + 1].getManufacturingDate())) {
-                    Medicine tmp = all[j];
-                    all[j] = all[j + 1];
-                    all[j + 1] = tmp;
+        for (int i = 0; i < total - 1; i++) {
+            for (int j = 0; j < total - 1 - i; j++) {
+                if (todos[j].getManufacturingDate().isAfter(todos[j + 1].getManufacturingDate())) {
+                    Medicine temp = todos[j];
+                    todos[j] = todos[j + 1];
+                    todos[j + 1] = temp;
                 }
-
-        System.out.printf("  %-28s | %-10s | %s%n", "Nombre", "Fab.", "Compacto");
-        line();
-        for (int i = 0; i < total; i++) {
-            System.out.printf("  %s%n", compactMed(all[i]));
+            }
         }
-        line();
-        System.out.println("  Total: " + total);
+
+        System.out.println("\n------ TODOS LOS MEDICAMENTOS POR FECHA ------");
+        for (int i = 0; i < total; i++) {
+            System.out.println(todos[i].getMedicineName() + " | " + todos[i].getManufacturingDate() + " | $" + todos[i].getMedicinePricePublic());
+        }
+        System.out.println("Total: " + total);
     }
 
-    static void printSortedPills() {
-        title("PASTILLAS ORDENADAS");
-        for (int i = 0; i < pillCount; i++) System.out.println("  " + compactPill(pills[i]));
-        line();
-    }
-
-    static void printSortedSyrups() {
-        title("JARABES ORDENADOS");
-        for (int i = 0; i < syrupCount; i++) System.out.println("  " + compactSyrup(syrups[i]));
-        line();
-    }
-
-    static void printSortedOintments() {
-        title("POMADAS ORDENADAS");
-        for (int i = 0; i < ointCount; i++) System.out.println("  " + compactOintment(ointments[i]));
-        line();
-    }
-
-    static void exitProgram() {
-        if (readYesNo("  ¿Desea salir del sistema?")) {
-            System.out.println("\n  Hasta luego. Farmacia El Ahorro.");
+    static void menuSalir() {
+        System.out.print("Seguro que deseas salir? (s/n): ");
+        String conf = sc.nextLine();
+        if (conf.equalsIgnoreCase("s")) {
+            System.out.println("Hasta luego!");
             System.exit(0);
         } else {
-            System.out.println("  Regresando al menú principal.");
+            System.out.println("Regresando al menu...");
         }
     }
 }
