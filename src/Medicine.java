@@ -1,6 +1,6 @@
 import java.time.LocalDate;
 
-public class Medicine {
+public abstract class Medicine {
 
     private String medicineName;
     private String laboratoryName;
@@ -24,81 +24,29 @@ public class Medicine {
         this.expirationDate = expirationDate;
     }
 
-    // ── Getters ─────────────────────────────────────────────────────────────
-    public String getMedicineName() {
-        return medicineName;
-    }
+    // Getters
+    public String getMedicineName()          { return medicineName; }
+    public String getLaboratoryName()        { return laboratoryName; }
+    public boolean isGeneric()               { return generic; }
+    public int getBarCode()                  { return barCode; }
+    public double getMedicinePrice()         { return medicinePrice; }
+    public double getMedicinePricePublic()   { return medicinePricePublic; }
+    public LocalDate getManufacturingDate()  { return manufacturingDate; }
+    public LocalDate getExpirationDate()     { return expirationDate; }
 
-    public String getLaboratoryName() {
-        return laboratoryName;
-    }
-
-    public boolean isGeneric() {
-        return generic;
-    }
-
-    public int getBarCode() {
-        return barCode;
-    }
-
-    public double getMedicinePrice() {
-        return medicinePrice;
-    }
-
-    public double getMedicinePricePublic() {
-        return medicinePricePublic;
-    }
-
-    public LocalDate getManufacturingDate() {
-        return manufacturingDate;
-    }
-
-    public LocalDate getExpirationDate() {
-        return expirationDate;
-    }
-
-    // ── Setters ─────────────────────────────────────────────────────────────
-    public void setMedicineName(String medicineName) {
-        this.medicineName = medicineName;
-    }
-
-    public void setLaboratoryName(String laboratoryName) {
-        this.laboratoryName = laboratoryName;
-    }
-
-    public void setGeneric(boolean generic) {
-        this.generic = generic;
-    }
-
-    public void setBarCode(int barCode) {
-        this.barCode = barCode;
-    }
-
-    public void setMedicinePrice(double medicinePrice) {
-        this.medicinePrice = medicinePrice;
-    }
-
-    public void setMedicinePricePublic(double p) {
-        this.medicinePricePublic = p;
-    }
-
-    public void setManufacturingDate(LocalDate manufacturingDate) {
-        this.manufacturingDate = manufacturingDate;
-    }
-
-    public void setExpirationDate(LocalDate expirationDate) {
-        this.expirationDate = expirationDate;
-    }
+    // Setter solo para precio público (modificación de inventario)
+    public void setMedicinePricePublic(double p) { this.medicinePricePublic = p; }
 
     @Override
     public String toString() {
-        return "  Nombre          : " + medicineName +
-                "\n  Laboratorio     : " + laboratoryName +
-                "\n  Genérico        : " + (generic ? "Sí" : "No") +
-                "\n  Código de barras: " + barCode +
-                "\n  Costo           : $" + String.format("%.2f", medicinePrice) +
-                "\n  Precio público  : $" + String.format("%.2f", medicinePricePublic) +
-                "\n  Fecha fabricación: " + manufacturingDate +
-                "\n  Fecha caducidad : " + expirationDate;
+        return "<html><body style='font-family:monospace; font-size:13px; padding:8px'>" +
+                "<b>Nombre:</b> "           + medicineName  + "<br>" +
+                "<b>Laboratorio:</b> "      + laboratoryName + "<br>" +
+                "<b>Genérico:</b> "         + (generic ? "Sí" : "No") + "<br>" +
+                "<b>Código de barras:</b> " + barCode        + "<br>" +
+                "<b>Costo:</b> $"           + String.format("%.2f", medicinePrice) + "<br>" +
+                "<b>Precio público:</b> $"  + String.format("%.2f", medicinePricePublic) + "<br>" +
+                "<b>Fabricación:</b> "      + manufacturingDate + "<br>" +
+                "<b>Caducidad:</b> "        + expirationDate;
     }
 }
